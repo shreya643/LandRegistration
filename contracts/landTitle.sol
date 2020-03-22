@@ -1,50 +1,5 @@
 pragma solidity ^0.5.0;
 contract landTitle {
-   
-   struct Deeds{
-       string owner_name;
-       string land_type;
-       string district;
-       string municipality;
-       uint ward_no;
-       uint plot_no;
-   }
-   
-    mapping(uint=>Deeds) register_id;
-    mapping(uint=>string) new_owner
-    
-    address public owner;
-
-    constructor() public {
-        owner = msg.sender;
-    }
-    
-    modifier verifyOwner(){require(msg.sender==owner);_;}
-    
-    
-    function getDetails(uint) view public returns (string owner_name, string land_type, string district, string municipality, uint ward_no, uint plot_no) {
-        name=register_id[uint].owner_name;
-        land=register_id[uint].land_type;
-        district=register_id[uint].district;
-        municipality=register_id[uint].municipality;
-        ward=register_id[uint].ward_no;
-        plot=register_id[uint].plot_no;
-        returns (name,land,district,municipality,ward,plot);
-    }
- 
-    function registerLand(uint id,string owner_name, string land_type, string district, string municipality, uint ward_no, uint plot_no) public verifyOwner() returns (bool){
-        // modifier garney?
-        register_id[id].owner_name=owner_name;
-        register_id[id].land_type=land_type;
-        register_id[id].district=district;
-        register_id[id].municipality=municipality;
-        register_id[id].ward_no=ward_no;
-        register_id[id].plot_no=plot_no;
-        returns true;
-    }
-
-    function changeOwnership(uint id,string new_ownpragma solidity ^0.5.0;
-contract landTitle {
     
    struct Deeds{
        string owner_name;
@@ -112,9 +67,3 @@ contract landTitle {
         return true;
     }       
 }
-er) public verifyOwner() returns(bool){
-        register_id[id].owner_name=new_owner;
-        returns true;
-    }       
-}
-
