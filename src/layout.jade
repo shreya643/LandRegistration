@@ -1,0 +1,150 @@
+doctype html
+html
+  head
+    title Landing Page
+    link(rel="stylesheet", href="/javascripts/Leaflet-0.7/dist/leaflet.css")
+    script(src="https://unpkg.com/leaflet@0.7.0/dist/leaflet.js")
+    script(src="/javascripts/leaflet.ajax.min.js")
+    script( src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js")
+    link(rel="stylesheet", href="/javascripts/Leaflet-draw/dist//leaflet.draw.css")
+    script(src="/javascripts/Leaflet-draw/dist/leaflet.draw.js")
+    style(type="text/css").  
+        #map {
+            width: 100%;
+            height: 500px;
+            border: 1px solid black;
+            z-index: 0;
+        }
+
+  body
+    block content
+
+    script(type="text/javascript").
+        var geojsonLayer1,geojsonLayer2,geojsonLayer3,geojsonLayer4;
+        var map = L.map('map').setView([ 28.613458,  84.287101], 7); 
+
+        L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
+        }).addTo(map);
+
+        var url = 'outline.geojson';  // my GeoJSON data source, in same folder as my html page.
+        var myStyle = {
+            "color": "#ff7800",
+            "weight": 3,
+            "opacity": 0.65
+        };
+
+        function showWards(f,l){
+            l.on('click',function(e){
+                map.fitBounds(this.getBounds());
+                var ward=f.properties['DISTRICT'].toLowerCase().concat('-','ward','-',f.properties['NEW_WARD_N']);
+                console.log(f);
+                geojsonLayer4 = new L.GeoJSON.AJAX(ward+".geojson");   
+                map.removeLayer(geojsonLayer3);
+                geojsonLayer4.addTo(map);
+                geojsonLayer4.enableEdit();
+                });
+            }
+
+        function showNagarpalika(f,l){
+            l.on('click',function(e){
+                map.fitBounds(this.getBounds());
+                var nagarpalika=f.properties['locallevel_name'].toLowerCase();
+                console.log(nagarpalika);
+                geojsonLayer3 = new L.GeoJSON.AJAX('wards.geojson', {
+                filter: function(feature, layer) {
+                return feature.properties['GaPa_NaPa'].toLowerCase()==nagarpalika
+                },onEachFeature:showWards
+            });  
+                geojsonLayer3.addTo(map);
+                map.removeLayer(geojsonLayer2);
+            })
+        }
+
+        function showMunicipality(f,l){
+            l.on('click',function(e){
+                map.fitBounds(this.getBounds());
+                var municipality=f.properties['DISTRICT'].toLowerCase();
+                geojsonLayer2 =new L.GeoJSON.AJAX('municipalities.high.geojson', {
+                filter: function(feature, layer) {
+                return feature.properties['district'].toLowerCase()==municipality
+                },onEachFeature:showNagarpalika
+            });
+            geojsonLayer2.addTo(map);
+            map.removeLayer(geojsonLayer1);
+
+            // var geojsonLayer2 = new L.GeoJSON.AJAX(municipality+'.geojson',{onEachFeature:showNagarpalika});   
+            // geojsonLayer2.addTo(map);
+
+            });
+        }
+
+        function showProvince(f,l){  
+        l.on('click', function (e) {
+            map.fitBounds(this.getBounds());
+            var seeArea = L.GeometryUtil.geodesicArea(l.getLatLngs());
+            var province=f.properties['Title'].split(' No. ').join('');
+            console.log(province);
+            geojsonLayer1 = new L.GeoJSON.AJAX(province+'.geojson',{onEachFeature:showMunicipality});
+
+            geojsonLayer1.addTo(map);
+
+            console.log(province);
+            l.bindPopup(seeArea);
+        });
+        }
+
+        var geojsonLayer = new L.GeoJSON.AJAX(url,{
+         style:myStyle,onEachFeature:showProvince});
+        // var geojsonLayer3 = new L.GeoJSON.AJAX('ward4.geojson');           
+
+        geojsonLayer.addTo(map);
+        var editableLayers = new L.FeatureGroup();
+        map.addLayer(editableLayers);
+
+        //var g= new L.GeoJSON.AJAX('a.geojson');
+        //map.addLayer(g);
+
+        var drawPluginOptions = {
+        position: 'topright',
+        draw: {
+            polygon: {
+            showArea:true,
+            metric:false,
+            feet:true,
+            shapeOptions: {
+            stroke : true, color :"#03f", weight :1, opacity : 1,
+            fill :true, fillColor : "#03f", fillOpacity :0.4, dashArray : null,
+            lineCap :null, lineJoin : null, clickable :true,
+            pointerEvents :null, smoothFactor : 1, noClip : true }
+            },
+            // disable toolbar item by setting it to false
+            polyline: false,
+            circle: false, // Turns off this drawing tool
+            rectangle: false,
+            marker: false,
+            },
+            edit: {
+                featureGroup: editableLayers, //REQUIRED!!
+                remove: false
+            }
+        };
+
+        // Initialise the draw control and pass it the FeatureGroup of editable layers
+        var drawControl = new L.Control.Draw(drawPluginOptions);
+        map.addControl(drawControl);
+
+        map.on('draw:created', function (e) {
+            var type = e.layerType,
+            layer = e.layer;
+            var geojson =layer.toGeoJSON();
+            geojson['properties']={'Plot':'112','Owner':'1123'};
+            console.log(geojson);
+
+            if (type === 'polygon') {
+
+                    console.log('polygon');
+            }
+            map.addLayer(layer);
+        });
